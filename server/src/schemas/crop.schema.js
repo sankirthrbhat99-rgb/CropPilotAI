@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { optionalDate } from './common.schema.js';
 
 export const growthStageEnum = z.enum([
   'Seedling',
@@ -24,15 +25,16 @@ export const createCropSchema = z.object({
   }).uuid('Invalid Field ID UUID format'),
   name: z.string({
     required_error: 'Crop name is required'
-  }).min(1, 'Crop name cannot be empty').max(150, 'Crop name is too long'),
+  }).trim().min(1, 'Crop name cannot be empty').max(150, 'Crop name is too long'),
   growth_stage: growthStageEnum.default('Seedling'),
-  planting_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Planting date must be in YYYY-MM-DD format').optional().nullable(),
+  planting_date: optionalDate,
   status: cropStatusEnum.default('Healthy')
 });
 
+// field_id is intentionally not updatable.
 export const updateCropSchema = z.object({
-  name: z.string().min(1, 'Crop name cannot be empty').max(150).optional(),
+  name: z.string().trim().min(1, 'Crop name cannot be empty').max(150).optional(),
   growth_stage: growthStageEnum.optional(),
-  planting_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Planting date must be in YYYY-MM-DD format').optional().nullable(),
+  planting_date: optionalDate,
   status: cropStatusEnum.optional()
 });

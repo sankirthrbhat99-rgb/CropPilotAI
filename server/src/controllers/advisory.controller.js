@@ -45,7 +45,7 @@ export const getAdvisoryById = async (req, res, next) => {
 
     const { data: advisory, error } = await req.supabase
       .from('advisories')
-      .select('*, crops(id, name, growth_stage, status, fields(name, soil_type, farms(name, location))))')
+      .select('*, crops(id, name, growth_stage, status, fields(name, soil_type, farms(name, location)))')
       .eq('id', id)
       .eq('user_id', req.user.id)
       .single();

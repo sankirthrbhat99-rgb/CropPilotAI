@@ -9,6 +9,7 @@ export const RegisterPage = () => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
+  const [notice, setNotice] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
   const { signUp } = useAuth();
@@ -35,8 +36,12 @@ export const RegisterPage = () => {
 
     try {
       setSubmitting(true);
-      await signUp(email, password, fullName);
-      navigate('/dashboard', { replace: true });
+      const result = await signUp(email, password, fullName);
+      if (result?.session) {
+        navigate('/dashboard', { replace: true });
+      } else {
+        setNotice('Account created! Please check your email to confirm your address, then sign in.');
+      }
     } catch (err) {
       console.error('Registration error:', err);
       setError(err.message || 'Failed to create account. Please try again.');
@@ -61,6 +66,13 @@ export const RegisterPage = () => {
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-6 sm:px-10 shadow-xl shadow-slate-200/50 rounded-3xl border border-slate-100">
+          {notice && (
+            <div className="mb-6 p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-xs sm:text-sm text-emerald-800">
+              {notice}{' '}
+              <Link to="/login" className="font-bold underline">Go to Sign In</Link>
+            </div>
+          )}
+
           {error && (
             <div className="mb-6 p-4 rounded-2xl bg-red-50 border border-red-200 text-xs sm:text-sm text-red-700 flex items-start gap-3">
               <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />

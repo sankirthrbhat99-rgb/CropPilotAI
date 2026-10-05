@@ -50,7 +50,7 @@ export const getCropById = async (req, res, next) => {
       .select('*, fields(id, name, soil_type, farms(id, name)), advisories(*)')
       .eq('id', id)
       .eq('user_id', req.user.id)
-      .order('created_at', { foreignTable: 'advisories', ascending: false })
+      .order('created_at', { referencedTable: 'advisories', ascending: false })
       .single();
 
     if (error || !crop) {

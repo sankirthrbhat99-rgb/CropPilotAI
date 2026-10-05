@@ -163,12 +163,18 @@ BEGIN
         updated_at = timezone('utc'::text, now());
     RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
     AFTER INSERT OR UPDATE ON auth.users
     FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+-- Backfill profiles for any users that already existed before this migration ran
+INSERT INTO public.profiles (id, email, full_name)
+SELECT u.id, u.email, COALESCE(u.raw_user_meta_data->>'full_name', '')
+FROM auth.users u
+ON CONFLICT (id) DO NOTHING;
 
 -- =============================================================================
 -- ROW LEVEL SECURITY (RLS) POLICIES
@@ -241,13 +247,19 @@ CREATE POLICY "fields_select_policy" ON public.fields
 DROP POLICY IF EXISTS "fields_insert_policy" ON public.fields;
 CREATE POLICY "fields_insert_policy" ON public.fields
     FOR INSERT TO authenticated
-    WITH CHECK (auth.uid() = user_id);
+    WITH CHECK (
+        auth.uid() = user_id
+        AND EXISTS (SELECT 1 FROM public.farms f WHERE f.id = farm_id AND f.user_id = auth.uid())
+    );
 
 DROP POLICY IF EXISTS "fields_update_policy" ON public.fields;
 CREATE POLICY "fields_update_policy" ON public.fields
     FOR UPDATE TO authenticated
     USING (auth.uid() = user_id)
-    WITH CHECK (auth.uid() = user_id);
+    WITH CHECK (
+        auth.uid() = user_id
+        AND EXISTS (SELECT 1 FROM public.farms f WHERE f.id = farm_id AND f.user_id = auth.uid())
+    );
 
 DROP POLICY IF EXISTS "fields_delete_policy" ON public.fields;
 CREATE POLICY "fields_delete_policy" ON public.fields
@@ -265,13 +277,19 @@ CREATE POLICY "crops_select_policy" ON public.crops
 DROP POLICY IF EXISTS "crops_insert_policy" ON public.crops;
 CREATE POLICY "crops_insert_policy" ON public.crops
     FOR INSERT TO authenticated
-    WITH CHECK (auth.uid() = user_id);
+    WITH CHECK (
+        auth.uid() = user_id
+        AND EXISTS (SELECT 1 FROM public.fields fl WHERE fl.id = field_id AND fl.user_id = auth.uid())
+    );
 
 DROP POLICY IF EXISTS "crops_update_policy" ON public.crops;
 CREATE POLICY "crops_update_policy" ON public.crops
     FOR UPDATE TO authenticated
     USING (auth.uid() = user_id)
-    WITH CHECK (auth.uid() = user_id);
+    WITH CHECK (
+        auth.uid() = user_id
+        AND EXISTS (SELECT 1 FROM public.fields fl WHERE fl.id = field_id AND fl.user_id = auth.uid())
+    );
 
 DROP POLICY IF EXISTS "crops_delete_policy" ON public.crops;
 CREATE POLICY "crops_delete_policy" ON public.crops
@@ -289,13 +307,19 @@ CREATE POLICY "advisories_select_policy" ON public.advisories
 DROP POLICY IF EXISTS "advisories_insert_policy" ON public.advisories;
 CREATE POLICY "advisories_insert_policy" ON public.advisories
     FOR INSERT TO authenticated
-    WITH CHECK (auth.uid() = user_id);
+    WITH CHECK (
+        auth.uid() = user_id
+        AND EXISTS (SELECT 1 FROM public.crops c WHERE c.id = crop_id AND c.user_id = auth.uid())
+    );
 
 DROP POLICY IF EXISTS "advisories_update_policy" ON public.advisories;
 CREATE POLICY "advisories_update_policy" ON public.advisories
     FOR UPDATE TO authenticated
     USING (auth.uid() = user_id)
-    WITH CHECK (auth.uid() = user_id);
+    WITH CHECK (
+        auth.uid() = user_id
+        AND EXISTS (SELECT 1 FROM public.crops c WHERE c.id = crop_id AND c.user_id = auth.uid())
+    );
 
 DROP POLICY IF EXISTS "advisories_delete_policy" ON public.advisories;
 CREATE POLICY "advisories_delete_policy" ON public.advisories

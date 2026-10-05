@@ -110,6 +110,7 @@ CropPilotAI/
    GEMINI_API_KEY=AIzaSy...              # Get from Google AI Studio
    SUPABASE_URL=https://xyz.supabase.co
    SUPABASE_SECRET_KEY=eyJhbGci...      # From Supabase Project Settings -> API (secret key)
+   SUPABASE_PUBLISHABLE_KEY=eyJhbGci... # Same publishable key as the client; lets RLS apply to per-user queries
    ```
 3. Run the development server:
    ```bash
@@ -177,3 +178,4 @@ CropPilotAI/
    - `GEMINI_API_KEY`
    - `SUPABASE_URL`
    - `SUPABASE_SECRET_KEY`
+   - `SUPABASE_PUBLISHABLE_KEY`

@@ -28,7 +28,9 @@ const corsOptions = {
       return callback(null, true);
     }
 
-    return callback(new Error(`CORS policy blocked access from origin: ${origin}`));
+    const corsError = new Error('Origin not allowed by CORS policy');
+    corsError.statusCode = 403;
+    return callback(corsError);
   },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],

@@ -54,7 +54,10 @@ export const generateCropAdvisory = async ({
   const apiKey = process.env.GEMINI_API_KEY;
 
   if (!apiKey || apiKey === 'your_gemini_api_key_here') {
-    const error = new Error('Gemini API key is not configured in backend environment (GEMINI_API_KEY)');
+    logger.error('GEMINI_API_KEY is not configured in the backend environment.');
+    const error = new Error(
+      'The AI advisor is temporarily unable to generate a diagnosis. Please try again in a moment.'
+    );
     error.statusCode = 500;
     throw error;
   }
@@ -113,10 +116,12 @@ Provide a diagnostic assessment, probable causes, immediate mitigation steps, su
 
     return validationResult.data;
   } catch (err) {
+    // Log details server-side only (never includes the API key)
     logger.error('Error in Gemini Advisory Service:', err.message);
-    // Ensure we do not crash or leak internal details
-    const outputError = new Error(err.message || 'Error occurred while contacting Gemini Crop Advisor');
-    outputError.statusCode = err.statusCode || 500;
+    const outputError = new Error(
+      'The AI advisor is temporarily unable to generate a diagnosis. Please try again in a moment.'
+    );
+    outputError.statusCode = 500;
     throw outputError;
   }
 };
